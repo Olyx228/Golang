@@ -1,12 +1,13 @@
 package save
 
 import (
+	"errors"
+	"net/http"
+
 	"UrlScrather/internal/lib/api/response"
 	"UrlScrather/internal/lib/logger/sl"
 	"UrlScrather/internal/lib/random"
 	"UrlScrather/internal/storage"
-	"errors"
-	"net/http"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -15,20 +16,19 @@ import (
 )
 
 type Request struct {
-	URl   string `json:"url" validate:"required,url"`
+	URL   string `json:"url" validate:"required,url"`
 	Alias string `json:"alias,omitempty"`
 }
 
 type Response struct {
-	Status string `json:"status"`
-	Error  string `json:"error,omitempty"`
-	Alias  string `json:"alias,omitempty"`
+	response.Response
+	Alias string `json:"alias,omitempty"`
 }
 
 const aliasLenght = 6
 
-type UrlSaver interface {
-	Save(urlToSave string, alias string) (int64, error)
+type URLSaver interface {
+	SaveURL(urlToSave string, alias string) (int64, error)
 }
 
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
@@ -57,7 +57,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 			log.Error("invalid request", sl.Err(err))
 
-			render.JSON(w, r, resp.ValidationError(validateErr))
+			render.JSON(w, r, response.ValidationError(validateErr))
 
 			return
 		}
@@ -70,7 +70,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		if errors.Is(err, storage.ErrURLExists) {
 			log.Info("url already exists", slog.String("url", req.URL))
 
-			render.JSON(w, r, resp.Error("url already exists"))
+			render.JSON(w, r, response.Error("url already exists"))
 
 			return
 		}
@@ -84,9 +84,12 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 
 		log.Info("url added", slog.Int64("id", id))
 
-		render.JSON(w, r, Response{
-			Response: response.OK(),
-			Alias:    alias,
-		})
+		responseOK(w, r, alias)
 	}
+}
+func responseOK(w http.ResponseWriter, r *http.Request, alias string) {
+	render.JSON(w, r, Response{
+		Response: response.OK(),
+		Alias:    alias,
+	})
 }
