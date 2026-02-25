@@ -24,8 +24,9 @@ func main() {
 
 	log.Info("starting url-shotener", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
+	log.Error("EBLAN")
 
-	storage, err := sqlite.New(cfg.StoragePath)
+	_, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
 		log.Error("failed to init storage", sl.Err(err))
 		os.Exit(1)
@@ -35,7 +36,9 @@ func main() {
 
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
-	
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
+
 	// TODO: init router: chi, "chi render"
 
 	// TODO: init run server:
