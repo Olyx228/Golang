@@ -4,6 +4,8 @@ import (
 	"UrlScrather/internal/lib/api/response"
 	"UrlScrather/internal/lib/logger/sl"
 	"UrlScrather/internal/lib/random"
+	"UrlScrather/internal/storage"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -63,5 +65,28 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		if alias == "" {
 			alias = random.NewRandomString(aliasLenght)
 		}
+
+		id, err := urlSaver.SaveURL(req.URL, alias)
+		if errors.Is(err, storage.ErrURLExists) {
+			log.Info("url already exists", slog.String("url", req.URL))
+
+			render.JSON(w, r, resp.Error("url already exists"))
+
+			return
+		}
+		if err != nil {
+			log.Error("failed to save url", "error", sl.Err(err))
+
+			render.JSON(w, r, response.Error("failed to save url"))
+
+			return
+		}
+
+		log.Info("url added", slog.Int64("id", id))
+
+		render.JSON(w, r, Response{
+			Response: response.OK(),
+			Alias:    alias,
+		})
 	}
 }
