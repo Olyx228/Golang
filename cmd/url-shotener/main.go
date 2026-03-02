@@ -22,15 +22,15 @@ const (
 func main() {
 	cfg := config.MustLoad()
 
-	log := setupLogger(cfg.Env)
+	logger := setupLogger(cfg.Env)
 
-	log.Info("starting url-shotener", slog.String("env", cfg.Env))
-	log.Debug("debug messages are enabled")
-	log.Error("EBLAN")
+	logger.Info("starting url-shotener", slog.String("env", cfg.Env))
+	logger.Debug("debug messages are enabled")
+	logger.Error("EBLAN")
 
-	_, err := sqlite.New(cfg.StoragePath)
+	store, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
-		log.Error("failed to init storage", sl.Err(err))
+		logger.Error("failed to init storage", sl.Err(err))
 		os.Exit(1)
 	}
 
@@ -41,9 +41,9 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	router.Post("url", save.New(log, storage))
+	router.Post("url", save.New(logger, store))
 
-	log.Info("starting url-shotener", slog.String("address", cfg.Address))
+	logger.Info("starting url-shotener", slog.String("address", cfg.Address))
 
 	srv := &http.Server{
 		Addr:         cfg.Address,
@@ -53,9 +53,9 @@ func main() {
 		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	}
 	if err := srv.ListenAndServe(); err != nil {
-		log.Error("failed to start server", sl.Err(err))
+		logger.Error("failed to start server", sl.Err(err))
 	}
-	log.Error(" server stoped")
+	logger.Error(" server stoped")
 	// TODO: init router: chi, "chi render"
 
 	// TODO: init run server:

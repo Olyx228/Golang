@@ -2,6 +2,7 @@ package save
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"UrlScrather/internal/lib/api/response"
@@ -12,7 +13,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
-	"golang.org/x/exp/slog"
 )
 
 type Request struct {
@@ -26,6 +26,8 @@ type Response struct {
 }
 
 const aliasLenght = 6
+
+//go:generate mockery --name=URLSaver
 
 type URLSaver interface {
 	SaveURL(urlToSave string, alias string) (int64, error)
