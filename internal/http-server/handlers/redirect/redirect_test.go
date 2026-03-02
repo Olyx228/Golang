@@ -23,9 +23,14 @@ func TestSaveHandler(t *testing.T) {
 		mockError error
 	}{
 		{
-			name:  "Success",
+			name:  "Google",
 			alias: "test_alias",
 			url:   "https://www.google.com/",
+		},
+		{
+			name:  "Porno",
+			alias: "test_alias",
+			url:   "https://www.pornhub.com/",
 		},
 	}
 
