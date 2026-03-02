@@ -10,7 +10,7 @@ import (
 
 	"UrlScrather/internal/http-server/handlers/redirect"
 	"UrlScrather/internal/http-server/handlers/redirect/mocks"
-	//"UrlScrather/internal/lib/api"
+	"UrlScrather/internal/lib/api"
 	"UrlScrather/internal/lib/logger/handlers/slogdiscard"
 )
 
