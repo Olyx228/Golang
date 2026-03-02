@@ -2,6 +2,7 @@ package main
 
 import (
 	"UrlScrather/internal/config"
+	"UrlScrather/internal/http-server/handlers/redirect"
 	"UrlScrather/internal/http-server/handlers/url/save"
 	"UrlScrather/internal/lib/logger/sl"
 	"UrlScrather/internal/storage/sqlite"
@@ -41,7 +42,16 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	router.Post("url", save.New(logger, store))
+	router.Route("/url", func(r chi.Router) {
+		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
+			cfg.HTTPServer.User: cfg.HTTPServer.Password,
+		}))
+
+		r.Post("/", save.New(logger, store))
+		// TODO: add DELETE /url/{id}
+	})
+
+	router.Get("/{alias}", redirect.New(logger, store))
 
 	logger.Info("starting url-shotener", slog.String("address", cfg.Address))
 
